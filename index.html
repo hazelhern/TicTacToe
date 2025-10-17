@@ -75,6 +75,7 @@
         <div class="metric"><span>Decision time</span><span id="time">0 ms</span></div>
         <div class="metric"><span>Nodes explored</span><span id="nodes">0</span></div>
         <div class="metric"><span>Pruned</span><span id="pruned">0</span></div>
+        <div class="metric"><span>Pruning Efficiency</span><span id="efficiency">0%</span></div>
       </div>
     </div>
   </div>
@@ -177,17 +178,24 @@ function createWorker() {
   worker = new Worker(url);
   worker.onmessage = e => {
     if (e.data.type === 'progress') {
-      nodesEl.textContent = e.data.nodes;
-      prunedEl.textContent = e.data.pruned;
-    }
+  const { nodes, pruned } = e.data;
+  nodesEl.textContent = nodes;
+  prunedEl.textContent = pruned;
+  const efficiency = (pruned / (nodes + pruned)) * 100;
+  document.getElementById('efficiency').textContent =
+    isFinite(efficiency) ? efficiency.toFixed(1) + '%' : '0%';
+}
     if (e.data.type === 'done') {
-      const { i, time, nodes, pruned } = e.data;
-      timeEl.textContent = Math.round(time) + ' ms';
-      nodesEl.textContent = nodes;
-      prunedEl.textContent = pruned;
-      awaitingAI = false; boardDisabled = false;
-      if (i >= 0 && !board[i]) makeMove(i, currentPlayer);
-    }
+  const { i, time, nodes, pruned } = e.data;
+  timeEl.textContent = Math.round(time) + ' ms';
+  nodesEl.textContent = nodes;
+  prunedEl.textContent = pruned;
+  const efficiency = (pruned / (nodes + pruned)) * 100;
+  document.getElementById('efficiency').textContent =
+    isFinite(efficiency) ? efficiency.toFixed(1) + '%' : '0%';
+  awaitingAI = false; boardDisabled = false;
+  if (i >= 0 && !board[i]) makeMove(i, currentPlayer);
+}
   };
 }
 
